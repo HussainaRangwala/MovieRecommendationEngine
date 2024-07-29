@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[4]:
+# In[3]:
 
 
 import pyspark
@@ -12,11 +12,18 @@ from pyspark.ml.evaluation import RegressionEvaluator
 from pyspark.sql.functions import col, explode
 import pandas as pd
 
-# In[2]:
+
+# In[4]:
 
 
 # Create a SparkSession
-spark = SparkSession.builder     .appName("MovieRecommender")     .config("spark.executor.memory", "4g")     .config("spark.driver.memory", "4g")     .config("spark.network.timeout", "600s")     .config("spark.executor.heartbeatInterval", "60s")     .getOrCreate()
+spark = SparkSession.builder \
+    .appName("MovieRecommender") \
+    .config("spark.executor.memory", "4g") \
+    .config("spark.driver.memory", "4g") \
+    .config("spark.network.timeout", "600s") \
+    .config("spark.executor.heartbeatInterval", "60s") \
+    .getOrCreate()
 
 # Load movie ratings data from a file (replace with your data path)
 ratings_df = spark.read.csv("Data/ratings.csv", header=True, inferSchema=True)
@@ -27,7 +34,7 @@ ratings_df.show(5)
 movies_df.show(5)
 
 
-# In[2]:
+# In[5]:
 
 
 # Create ALS model
@@ -46,7 +53,7 @@ rmse = evaluator.evaluate(predictions)
 print(f"Root-mean-square error = {rmse}")
 
 
-# In[20]:
+# In[6]:
 
 
 # Get top 10 movie recommendations for a specific user
@@ -96,7 +103,7 @@ if st.button("Get Recommendations"):
     recommended_movie_ids_df = exploded_recommendations.select(col("recommendation.movieId").alias("movieId"))
     
     # Join with movies_df to get recommended movies
-    recommended_movies_list = recommended_movie_ids_df.join(movies_df, on="movieId", how="inner")
+    recommended_movies = recommended_movie_ids_df.join(movies_df, on="movieId", how="inner")
     
     # Collect the top 10 recommended movies
     recommended_movies_list = recommended_movies.limit(10).collect()
@@ -115,7 +122,7 @@ if st.button("Get Recommendations"):
     
     watched_movies_list=watched_movies.collect()
     
-    # Convert the collected rows to a pandas DataFrame
+     # Convert the collected rows to a pandas DataFrame
     watched_movies_pd_df = pd.DataFrame(watched_movies_list, columns=["movieId", "title","genres"])
     
     # Display the DataFrame as a table in Streamlit
