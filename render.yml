@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: pyspark-streamlit-app
+    env: python
+    buildCommand: |
+      # Install Java
+      sudo apt-get update && \
+      sudo apt-get install -y openjdk-11-jdk && \
+      # Install Python dependencies
+      pip install -r requirements.txt
+    startCommand: "./start_pyspark.sh"
+    envVars:
+      - key: JAVA_HOME
+        value: /usr/lib/jvm/java-11-openjdk-amd64
+      - key: PATH
+        value: "/usr/lib/jvm/java-11-openjdk-amd64/bin:$PATH"
+    plan: free  # Adjust the plan based on your requirements
+    autoDeploy: true
