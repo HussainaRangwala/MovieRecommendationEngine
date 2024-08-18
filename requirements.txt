@@ -1,3 +1,4 @@
+setuptools
 pandas==1.4.4
 pyspark==3.5.1
 streamlit==1.36.0
