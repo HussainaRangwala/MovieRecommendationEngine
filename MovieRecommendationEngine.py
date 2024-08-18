@@ -53,29 +53,6 @@ rmse = evaluator.evaluate(predictions)
 print(f"Root-mean-square error = {rmse}")
 
 
-# In[6]:
-
-
-# Get top 10 movie recommendations for a specific user
-user_id = 123
-user_recommendations = model.recommendForUserSubset(ratings_df.filter(col("userId") == user_id), 10)
-
-# Explode the recommendations to get individual movie recommendations
-exploded_recommendations = user_recommendations.select(explode("recommendations").alias("recommendation"))
-
-# Extract recommended movie IDs as a DataFrame
-recommended_movie_ids_df = exploded_recommendations.select(col("recommendation.movieId").alias("movieId"))
-
-# Join with movies_df to get recommended movies
-recommended_movies = recommended_movie_ids_df.join(movies_df, on="movieId", how="inner")
-
-# Show the recommended movies
-recommended_movies.show()
-
-
-# In[12]:
-
-
 # Initialize Spark session
 spark = SparkSession.builder.appName("MovieRecommender").getOrCreate()
 
