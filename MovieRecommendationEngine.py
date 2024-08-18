@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[3]:
+# In[2]:
 
 
 import pyspark
@@ -13,7 +13,7 @@ from pyspark.sql.functions import col, explode
 import pandas as pd
 
 
-# In[4]:
+# In[3]:
 
 
 # Create a SparkSession
@@ -34,7 +34,7 @@ ratings_df.show(5)
 movies_df.show(5)
 
 
-# In[5]:
+# In[3]:
 
 
 # Create ALS model
@@ -53,7 +53,7 @@ rmse = evaluator.evaluate(predictions)
 print(f"Root-mean-square error = {rmse}")
 
 
-# In[6]:
+# In[4]:
 
 
 # Get top 10 movie recommendations for a specific user
@@ -73,19 +73,30 @@ recommended_movies = recommended_movie_ids_df.join(movies_df, on="movieId", how=
 recommended_movies.show()
 
 
-# In[12]:
+# In[ ]:
 
 
 # Initialize Spark session
-spark = SparkSession.builder.appName("MovieRecommender").getOrCreate()
+@st.cache_resource
+def init_spark():
+    return SparkSession.builder.appName("MovieRecommender").getOrCreate()
 
-# Load data
-ratings_df = spark.read.csv("Data/ratings.csv", header=True, inferSchema=True)
-movies_df = spark.read.csv("Data/movies.csv", header=True, inferSchema=True)
+spark = init_spark()
 
-# Train ALS model
-als = ALS(maxIter=10, regParam=0.1, rank=10, userCol="userId", itemCol="movieId", ratingCol="rating", coldStartStrategy="drop")
-model = als.fit(ratings_df)
+@st.cache_data
+def load_data():
+    ratings_df = spark.read.csv("Data/ratings.csv", header=True, inferSchema=True)
+    movies_df = spark.read.csv("Data/movies.csv", header=True, inferSchema=True)
+    return ratings_df, movies_df
+
+ratings_df, movies_df = load_data()
+
+@st.cache_resource
+def train_model(ratings_df):
+    als = ALS(maxIter=10, regParam=0.1, rank=10, userCol="userId", itemCol="movieId", ratingCol="rating", coldStartStrategy="drop")
+    return als.fit(ratings_df)
+
+model = train_model(ratings_df)
 
 # Streamlit GUI
 st.image("background_img_2.jpg")
@@ -115,14 +126,14 @@ if st.button("Get Recommendations"):
     st.write("Top 10 Movie Recommendations:")
     st.table(recommended_movies_pd_df)
     
-    #Watched History
+    # Watched History
     watched_history = ratings_df.filter(col("userId") == user_id)
     watched_history_movie_ids_df = watched_history.select(col("movieId"))
-    watched_movies =watched_history_movie_ids_df.join(movies_df, on="movieId", how="inner")
+    watched_movies = watched_history_movie_ids_df.join(movies_df, on="movieId", how="inner")
     
-    watched_movies_list=watched_movies.collect()
+    watched_movies_list = watched_movies.collect()
     
-     # Convert the collected rows to a pandas DataFrame
+    # Convert the collected rows to a pandas DataFrame
     watched_movies_pd_df = pd.DataFrame(watched_movies_list, columns=["movieId", "title","genres"])
     
     # Display the DataFrame as a table in Streamlit
